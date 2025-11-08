@@ -24,6 +24,7 @@ function getAuth(): OAuth2Client {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost";
 
   if (!clientId || !clientSecret || !refreshToken) {
     throw new Error(
@@ -31,7 +32,7 @@ function getAuth(): OAuth2Client {
     );
   }
 
-  auth = new google.auth.OAuth2(clientId, clientSecret);
+  auth = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
   auth.setCredentials({ refresh_token: refreshToken });
 
   return auth;

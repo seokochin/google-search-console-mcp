@@ -38,8 +38,9 @@ npm install
 2. Click "Create Credentials" > "OAuth client ID"
 3. Select "Desktop app" as the application type
 4. Name it (e.g., "Search Console MCP")
-5. Click "Create"
-6. Download the credentials JSON or note the Client ID and Client Secret
+5. Add authorized redirect URI: `http://localhost` (or your preferred redirect URI)
+6. Click "Create"
+7. Download the credentials JSON or note the Client ID and Client Secret
 
 ### 4. Get Refresh Token
 
@@ -64,7 +65,10 @@ Create a `.env` file or set the following environment variables:
 export GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
 export GOOGLE_CLIENT_SECRET="your-client-secret"
 export GOOGLE_REFRESH_TOKEN="your-refresh-token"
+export GOOGLE_REDIRECT_URI="http://localhost"  # Optional, defaults to http://localhost
 ```
+
+**Note**: The redirect URI must match what you configured in Google Cloud Console (step 3.5)
 
 ### 6. Build the Project
 
@@ -88,7 +92,8 @@ Add this to your Claude Desktop configuration file:
       "env": {
         "GOOGLE_CLIENT_ID": "your-client-id.apps.googleusercontent.com",
         "GOOGLE_CLIENT_SECRET": "your-client-secret",
-        "GOOGLE_REFRESH_TOKEN": "your-refresh-token"
+        "GOOGLE_REFRESH_TOKEN": "your-refresh-token",
+        "GOOGLE_REDIRECT_URI": "http://localhost"
       }
     }
   }
