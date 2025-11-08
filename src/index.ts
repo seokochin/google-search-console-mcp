@@ -24,7 +24,6 @@ function getAuth(): OAuth2Client {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost";
 
   if (!clientId || !clientSecret || !refreshToken) {
     throw new Error(
@@ -32,7 +31,9 @@ function getAuth(): OAuth2Client {
     );
   }
 
-  auth = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+  // For refresh token flow (desktop app), redirect URI is not needed
+  // Redirect URI is only required during initial OAuth authorization (done via OAuth Playground)
+  auth = new google.auth.OAuth2(clientId, clientSecret);
   auth.setCredentials({ refresh_token: refreshToken });
 
   return auth;

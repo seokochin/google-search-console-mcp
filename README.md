@@ -38,9 +38,10 @@ npm install
 2. Click "Create Credentials" > "OAuth client ID"
 3. Select "Desktop app" as the application type
 4. Name it (e.g., "Search Console MCP")
-5. Add authorized redirect URI: `http://localhost` (or your preferred redirect URI)
-6. Click "Create"
-7. Download the credentials JSON or note the Client ID and Client Secret
+5. Click "Create"
+6. Download the credentials JSON or note the Client ID and Client Secret
+
+**Note**: You'll use these credentials with the OAuth Playground to get a refresh token. The redirect URI is only needed during that initial authorization step (handled by OAuth Playground), not for this MCP server.
 
 ### 4. Get Refresh Token
 
@@ -65,10 +66,9 @@ Create a `.env` file or set the following environment variables:
 export GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
 export GOOGLE_CLIENT_SECRET="your-client-secret"
 export GOOGLE_REFRESH_TOKEN="your-refresh-token"
-export GOOGLE_REDIRECT_URI="http://localhost"  # Optional, defaults to http://localhost
 ```
 
-**Note**: The redirect URI must match what you configured in Google Cloud Console (step 3.5)
+**Note**: Since we're using refresh token flow (not interactive OAuth), no redirect URI is needed at runtime.
 
 ### 6. Build the Project
 
@@ -92,8 +92,7 @@ Add this to your Claude Desktop configuration file:
       "env": {
         "GOOGLE_CLIENT_ID": "your-client-id.apps.googleusercontent.com",
         "GOOGLE_CLIENT_SECRET": "your-client-secret",
-        "GOOGLE_REFRESH_TOKEN": "your-refresh-token",
-        "GOOGLE_REDIRECT_URI": "http://localhost"
+        "GOOGLE_REFRESH_TOKEN": "your-refresh-token"
       }
     }
   }
