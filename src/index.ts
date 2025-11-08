@@ -14,29 +14,48 @@ import { OAuth2Client } from "google-auth-library";
 const searchconsole = google.searchconsole("v1");
 const SCOPES = ["https://www.googleapis.com/auth/webmasters"];
 
-// Initialize OAuth2 client
-let auth: OAuth2Client | null = null;
+// Initialize auth client
+let auth: any = null;
 
-// Initialize OAuth2 client from environment variables
-function getAuth(): OAuth2Client {
+// Initialize auth client from environment variables
+// Supports two authentication methods:
+// 1. Service Account (recommended for servers) - uses GOOGLE_SERVICE_ACCOUNT_KEY
+// 2. OAuth2 Refresh Token - uses GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN
+function getAuth(): any {
   if (auth) return auth;
 
+  // Method 1: Service Account (recommended - no refresh token needed!)
+  const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  if (serviceAccountKey) {
+    try {
+      const credentials = JSON.parse(serviceAccountKey);
+      auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: SCOPES,
+      });
+      return auth;
+    } catch (error: any) {
+      throw new Error(`Invalid GOOGLE_SERVICE_ACCOUNT_KEY: ${error.message}`);
+    }
+  }
+
+  // Method 2: OAuth2 Refresh Token (legacy support)
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
 
-  if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error(
-      "Missing required environment variables: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN"
-    );
+  if (clientId && clientSecret && refreshToken) {
+    auth = new google.auth.OAuth2(clientId, clientSecret);
+    auth.setCredentials({ refresh_token: refreshToken });
+    return auth;
   }
 
-  // For refresh token flow (desktop app), redirect URI is not needed
-  // Redirect URI is only required during initial OAuth authorization (done via OAuth Playground)
-  auth = new google.auth.OAuth2(clientId, clientSecret);
-  auth.setCredentials({ refresh_token: refreshToken });
-
-  return auth;
+  // No valid authentication method found
+  throw new Error(
+    "Missing authentication credentials. Please provide either:\n" +
+    "  1. GOOGLE_SERVICE_ACCOUNT_KEY (recommended) - JSON key file content, OR\n" +
+    "  2. GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN"
+  );
 }
 
 // Helper function to format dates

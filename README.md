@@ -13,7 +13,9 @@ A Model Context Protocol (MCP) server that provides tools for interacting with t
 
 - Node.js 18 or higher
 - Google Cloud Project with Search Console API enabled
-- OAuth 2.0 credentials (Client ID, Client Secret, and Refresh Token)
+- **Either**:
+  - Service Account credentials (recommended), OR
+  - OAuth 2.0 credentials (Client ID, Client Secret, and Refresh Token)
 
 ## Setup
 
@@ -32,7 +34,60 @@ npm install
    - Search for "Google Search Console API"
    - Click "Enable"
 
-### 3. Create OAuth 2.0 Credentials
+## Authentication
+
+This server supports **two authentication methods**. Choose the one that best fits your needs:
+
+### Method 1: Service Account (Recommended - No Refresh Token!) ⭐
+
+This is the **easiest and most secure** method for server applications.
+
+#### Step 1: Create a Service Account
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) > "IAM & Admin" > "Service Accounts"
+2. Click "Create Service Account"
+3. Name it (e.g., "Search Console MCP")
+4. Click "Create and Continue"
+5. Skip the optional steps and click "Done"
+
+#### Step 2: Create and Download Key
+
+1. Click on the service account you just created
+2. Go to the "Keys" tab
+3. Click "Add Key" > "Create new key"
+4. Select "JSON" format
+5. Click "Create" - a JSON file will download
+
+#### Step 3: Grant Access to Search Console
+
+1. Go to [Google Search Console](https://search.google.com/search-console)
+2. Select your property
+3. Go to "Settings" > "Users and permissions"
+4. Click "Add user"
+5. Enter the service account email (found in the JSON file: `client_email`)
+6. Set permission to "Owner" or "Full"
+7. Click "Add"
+
+#### Step 4: Set Environment Variable
+
+```bash
+export GOOGLE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"...","private_key":"..."}'
+```
+
+Or minified:
+```bash
+export GOOGLE_SERVICE_ACCOUNT_KEY=$(cat path/to/your-service-account-key.json)
+```
+
+✅ **That's it! No OAuth flow, no refresh tokens needed!**
+
+---
+
+### Method 2: OAuth 2.0 Refresh Token (Legacy)
+
+Use this if you prefer user-based authentication or don't have access to create service accounts.
+
+#### Step 1: Create OAuth 2.0 Credentials
 
 1. Go to "APIs & Services" > "Credentials"
 2. Click "Create Credentials" > "OAuth client ID"
@@ -41,26 +96,20 @@ npm install
 5. Click "Create"
 6. Download the credentials JSON or note the Client ID and Client Secret
 
-**Note**: You'll use these credentials with the OAuth Playground to get a refresh token. The redirect URI is only needed during that initial authorization step (handled by OAuth Playground), not for this MCP server.
-
-### 4. Get Refresh Token
-
-You need to obtain a refresh token using OAuth 2.0. Here's a simple way to do it:
+#### Step 2: Get Refresh Token
 
 1. Use the [OAuth 2.0 Playground](https://developers.google.com/oauthplayground/)
 2. Click the gear icon (⚙️) in the top right
 3. Check "Use your own OAuth credentials"
 4. Enter your Client ID and Client Secret
 5. In Step 1, find "Search Console API v1" and select:
-   - `https://www.googleapis.com/auth/webmasters.readonly`
+   - `https://www.googleapis.com/auth/webmasters` (or `.readonly` for read-only)
 6. Click "Authorize APIs"
 7. Sign in with your Google account
 8. In Step 2, click "Exchange authorization code for tokens"
 9. Copy the **Refresh token**
 
-### 5. Set Environment Variables
-
-Create a `.env` file or set the following environment variables:
+#### Step 3: Set Environment Variables
 
 ```bash
 export GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
@@ -68,9 +117,9 @@ export GOOGLE_CLIENT_SECRET="your-client-secret"
 export GOOGLE_REFRESH_TOKEN="your-refresh-token"
 ```
 
-**Note**: Since we're using refresh token flow (not interactive OAuth), no redirect URI is needed at runtime.
+---
 
-### 6. Build the Project
+## Build the Project
 
 ```bash
 npm run build
@@ -82,6 +131,29 @@ Add this to your Claude Desktop configuration file:
 
 **MacOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+### Using Service Account (Recommended):
+
+```json
+{
+  "mcpServers": {
+    "google-search-console": {
+      "command": "node",
+      "args": ["/absolute/path/to/google-search-console-mcp/dist/index.js"],
+      "env": {
+        "GOOGLE_SERVICE_ACCOUNT_KEY": "{\"type\":\"service_account\",\"project_id\":\"your-project\",\"private_key\":\"-----BEGIN PRIVATE KEY-----\\n...\"}"
+      }
+    }
+  }
+}
+```
+
+**Tip**: To get the minified JSON on one line:
+```bash
+cat your-service-account-key.json | jq -c
+```
+
+### Using OAuth Refresh Token:
 
 ```json
 {
